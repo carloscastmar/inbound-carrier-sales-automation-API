@@ -4,7 +4,7 @@ This repository contains the backend API for an inbound carrier sales automation
 
 The system simulates how a freight brokerage could use an AI-driven conversational platform to handle inbound carrier calls, verify carrier eligibility, match available loads, negotiate pricing, and track operational metrics.
 
-The API represents the **client-side system** that a conversational agent (e.g. HappyRobot) would integrate with in a real-world scenario.
+The API represents the **client-side system** that a conversational agent would integrate with in a real-world scenario.
 
 ---
 
@@ -13,7 +13,7 @@ The API represents the **client-side system** that a conversational agent (e.g. 
 The solution is composed of two main parts:
 
 1. **Conversational Layer**  
-   Implemented using the HappyRobot platform. It handles inbound calls, dialog flow, negotiation, and call routing.
+   Implemented using an AI agent. It handles inbound calls, dialog flow, negotiation, and call routing.
 
 2. **Client API (this repository)**  
    Owns business logic, data, and reporting, including:
