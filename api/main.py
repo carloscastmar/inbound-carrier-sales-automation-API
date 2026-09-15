@@ -10,6 +10,7 @@ from api.models import CallRecordRequest, CallRecordResponse
 from api.services.call_record import record_call
 from api.models import MetricsSummaryResponse
 from api.services.metrics import get_metrics_summary
+from scalar_fastapi import add_scalar_reference
 
 app = FastAPI(
     title="Broker Client API",
@@ -107,3 +108,10 @@ def record_call_endpoint(payload: CallRecordRequest):
 )
 def metrics_summary():
     return get_metrics_summary()
+
+# Bind the Scalar documentation to your app
+add_scalar_reference(
+    app=app,
+    documentation_url="/scalar",
+    title="My FastAPI App Docs",
+)
