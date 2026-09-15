@@ -1,0 +1,372 @@
+openapi: 3.1.0
+info:
+  title: Broker Client API
+  version: 1.0.0
+  description: |
+    Business operations API for an inbound carrier sales workflow.
+
+    The service supports carrier verification, load matching, negotiation setup,
+    call recording, and operational metrics aggregation for inbound sales teams.
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://freightbrokerageapi-development.up.railway.app
+    description: Deployed API
+security:
+  - X-API-Key: []
+paths:
+  /verify-carrier:
+    post:
+      tags:
+        - Carrier Verification
+      summary: Verify a carrier
+      description: Validates a carrier using the provided MC number and returns a normalized eligibility result.
+      operationId: verifyCarrier
+      security:
+        - X-API-Key: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyCarrierRequest'
+      responses:
+        '200':
+          description: Carrier verification was completed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyCarrierResponse'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /loads/search:
+    post:
+      tags:
+        - Load Search
+      summary: Search for a matching load
+      description: Searches available loads using lane and equipment preferences and returns the best match when available.
+      operationId: searchLoads
+      security:
+        - X-API-Key: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadSearchRequest'
+      responses:
+        '200':
+          description: Load search completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoadSearchResponse'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /negotiation/config:
+    post:
+      tags:
+        - Negotiation
+      summary: Get negotiation parameters
+      description: Returns the maximum rate, base rate, round limits, and counter offer rules for a specific load.
+      operationId: getNegotiationConfig
+      security:
+        - X-API-Key: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NegotiationConfigRequest'
+      responses:
+        '200':
+          description: Negotiation configuration returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NegotiationConfigResponse'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /calls/record:
+    post:
+      tags:
+        - Call Recording
+      summary: Record a completed call
+      description: Stores the result of a call, including outcome, sentiment, and negotiation metrics for reporting.
+      operationId: recordCall
+      security:
+        - X-API-Key: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallRecordRequest'
+      responses:
+        '200':
+          description: Call record created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallRecordResponse'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /metrics/summary:
+    get:
+      tags:
+        - Metrics
+      summary: Get call metrics summary
+      description: Returns aggregated call performance and negotiation metrics from recorded interactions.
+      operationId: getMetricsSummary
+      security:
+        - X-API-Key: []
+      responses:
+        '200':
+          description: Metrics summary generated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsSummaryResponse'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    X-API-Key:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Human-readable error message.
+      required:
+        - detail
+    VerifyCarrierRequest:
+      type: object
+      properties:
+        mc_number:
+          type: string
+          description: Motor carrier number used to verify carrier status.
+      required:
+        - mc_number
+    VerifyCarrierResponse:
+      type: object
+      properties:
+        eligible:
+          type: boolean
+        carrier_name:
+          type: string
+          nullable: true
+        operating_status:
+          type: string
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+      required:
+        - eligible
+    LoadSearchRequest:
+      type: object
+      properties:
+        origin:
+          type: string
+          nullable: true
+        destination:
+          type: string
+          nullable: true
+        pickup_after:
+          type: string
+          nullable: true
+          description: Preferred pickup date or date-time string.
+        equipment_type:
+          type: string
+          nullable: true
+        target_rate:
+          type: integer
+          nullable: true
+          description: Desired rate target in USD.
+    Load:
+      type: object
+      properties:
+        load_id:
+          type: string
+        origin:
+          type: string
+        destination:
+          type: string
+        pickup_datetime:
+          type: string
+        delivery_datetime:
+          type: string
+        equipment_type:
+          type: string
+        loadboard_rate:
+          type: integer
+        notes:
+          type: string
+        weight:
+          type: integer
+        commodity_type:
+          type: string
+        num_of_pieces:
+          type: integer
+        miles:
+          type: integer
+        dimensions:
+          type: string
+      required:
+        - load_id
+        - origin
+        - destination
+        - pickup_datetime
+        - delivery_datetime
+        - equipment_type
+        - loadboard_rate
+        - notes
+        - weight
+        - commodity_type
+        - num_of_pieces
+        - miles
+        - dimensions
+    LoadSearchResponse:
+      type: object
+      properties:
+        has_match:
+          type: boolean
+        load:
+          $ref: '#/components/schemas/Load'
+          nullable: true
+      required:
+        - has_match
+    NegotiationConfigRequest:
+      type: object
+      properties:
+        load_id:
+          type: string
+          description: The specific load for which pricing rules are requested.
+      required:
+        - load_id
+    NegotiationConfigResponse:
+      type: object
+      properties:
+        base_rate:
+          type: integer
+        max_rate:
+          type: integer
+        max_rounds:
+          type: integer
+        counter_step:
+          type: integer
+        currency:
+          type: string
+      required:
+        - base_rate
+        - max_rate
+        - max_rounds
+        - counter_step
+        - currency
+    CallRecordRequest:
+      type: object
+      properties:
+        call_id:
+          type: string
+        carrier_mc:
+          type: string
+          nullable: true
+        load_id:
+          type: string
+          nullable: true
+        initial_rate:
+          type: integer
+          nullable: true
+        final_rate:
+          type: integer
+          nullable: true
+        negotiation_rounds:
+          type: integer
+          nullable: true
+        outcome:
+          type: string
+          enum: [booked, no_match, rejected, transferred]
+        sentiment:
+          type: string
+          enum: [positive, neutral, negative]
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO timestamp of the completed call.
+      required:
+        - call_id
+        - outcome
+        - sentiment
+        - timestamp
+    CallRecordResponse:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    MetricsSummaryResponse:
+      type: object
+      properties:
+        total_calls:
+          type: integer
+        booked_calls:
+          type: integer
+        transferred_calls:
+          type: integer
+        no_match_calls:
+          type: integer
+        rejected_calls:
+          type: integer
+        booking_rate:
+          type: number
+          format: float
+        average_final_rate:
+          type: number
+          format: float
+        average_difference:
+          type: number
+          format: float
+        average_negotiation_rounds:
+          type: number
+          format: float
+        sentiment_breakdown:
+          type: object
+          additionalProperties:
+            type: integer
+      required:
+        - total_calls
+        - booked_calls
+        - transferred_calls
+        - no_match_calls
+        - rejected_calls
+        - booking_rate
+        - average_final_rate
+        - average_difference
+        - average_negotiation_rounds
+        - sentiment_breakdown
