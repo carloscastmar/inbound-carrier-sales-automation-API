@@ -109,9 +109,12 @@ def record_call_endpoint(payload: CallRecordRequest):
 def metrics_summary():
     return get_metrics_summary()
 
-# Bind the Scalar documentation to your app
+# Register Scalar without the app-level API key dependency, matching /docs and /redoc.
+_app_dependencies = app.router.dependencies
+app.router.dependencies = []
 add_scalar_reference(
     app=app,
-    documentation_url="/scalar",
+    route="/scalar",
     title="My FastAPI App Docs",
 )
+app.router.dependencies = _app_dependencies
